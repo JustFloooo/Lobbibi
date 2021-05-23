@@ -1,0 +1,5 @@
+main: net.problemzone.lobbibi.Main
+version: 1.0
+name: Lobbibi
+authors: [JustFloooo]
+api-version: 1.13
