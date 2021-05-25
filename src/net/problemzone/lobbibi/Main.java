@@ -21,6 +21,11 @@ public class Main extends JavaPlugin {
         getLogger().info("Lobbibi primed and ready.");
     }
 
+    @Override
+    public void onDisable() {
+        parkourManager.removeAllBlocks();
+    }
+
     private void registerListeners() {
         //Event Listeners
         getServer().getPluginManager().registerEvents(new ParkourListener(parkourManager), this);

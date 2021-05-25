@@ -1,6 +1,7 @@
 package net.problemzone.lobbibi.modules.parkour;
 
 import net.problemzone.lobbibi.util.Language;
+import net.problemzone.lobbibi.util.Sounds;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -14,20 +15,22 @@ import java.util.Random;
 
 public class ParkourManager {
 
-    private static final Material material = Material.CYAN_WOOL;
+    private static final Material PRESSURE_PLATE_MATERIAL = Material.LIGHT_WEIGHTED_PRESSURE_PLATE;
+    private static final Material BELOW_BLOCK_MATERIAL = Material.NETHERITE_BLOCK;
 
-    Map<Player, Jump> jumps = new HashMap<>();
+    Map<Player, JumpSequence> jumps = new HashMap<>();
 
     public Location newParkour(Player player) {
 
         if (jumps.containsKey(player)) cancelParkour(player);
         player.sendMessage(Language.JNR_START.getFormattedText());
-        jumps.put(player, new Jump(player.getLocation().getBlock()));
+        jumps.put(player, new JumpSequence(player.getLocation().getBlock()));
         return jumps.get(player).getCurrentBlock().getRelative(BlockFace.UP).getLocation();
 
     }
 
     public void generateNewBlock(Player player) {
+        Sounds.JUMP_SUCCESS.playSoundForPlayer(player);
         jumps.get(player).newJump();
     }
 
@@ -40,45 +43,59 @@ public class ParkourManager {
     }
 
     public Location cancelParkour(Player player) {
-        long duration = (System.currentTimeMillis() - jumps.get(player).getStartTime()) / 1000;
+        double duration = (double) (System.currentTimeMillis() - jumps.get(player).getStartTime()) / 1000;
         player.sendMessage(String.format(Language.JNR_FAIL.getFormattedText(), jumps.get(player).getJumpCount(), duration));
-        player.sendMessage(String.format(Language.JNR_AVERAGE.getFormattedText(), (double)jumps.get(player).getJumpCount()*60/duration));
+        player.sendMessage(String.format(Language.JNR_AVERAGE.getFormattedText(), (double) jumps.get(player).getJumpCount() * 60 / duration));
         jumps.get(player).removeBlocks();
         jumps.remove(player);
         return Objects.requireNonNull(player.getLocation().getWorld()).getSpawnLocation();
     }
 
     public boolean isStartBlock(Block block) {
-        if (block.getType() != Material.LIGHT_WEIGHTED_PRESSURE_PLATE) return false;
-        return block.getRelative(BlockFace.DOWN).getType() == Material.NETHERITE_BLOCK;
+        if (block.getType() != PRESSURE_PLATE_MATERIAL) return false;
+        return block.getRelative(BlockFace.DOWN).getType() == BELOW_BLOCK_MATERIAL;
     }
 
-    private static class Jump {
+    public void removeAllBlocks(){
+        jumps.values().forEach(JumpSequence::removeBlocks);
+    }
 
-        private final long startTime = System.currentTimeMillis();
-        private int jumpCount = 0;
+    private static class JumpSequence {
+
+        private final long startTime;
+        private final JumpColor jumpColor;
+
+        private int jumpCount;
 
         private Block currentBlock;
         private Block nextBlock;
 
-        private Jump(Block block) {
+        private JumpSequence(Block block) {
+            startTime = System.currentTimeMillis();
+            jumpColor = JumpColor.getNewColor();
+            jumpCount = -1;
+
+            generateStartBlock(block);
+            generateNextBlock();
+        }
+
+        private void generateStartBlock(Block block) {
             Random random = new Random();
             int x = random.nextInt(40) - 20;
             int z = 8 + random.nextInt(15);
 
             currentBlock = block.getRelative(x, 0, -z);
-            currentBlock.setType(Material.RED_WOOL);
-            generateBlock();
+            currentBlock.setType(jumpColor.getClay());
         }
 
         private void newJump() {
             currentBlock.setType(Material.AIR);
             currentBlock = nextBlock;
-            currentBlock.setType(Material.RED_WOOL);
-            generateBlock();
+            currentBlock.setType(jumpColor.getClay());
+            generateNextBlock();
         }
 
-        private void generateBlock() {
+        private void generateNextBlock() {
             Random random = new Random();
             int x = 2 + random.nextInt(3);
             int y = random.nextInt(2);
@@ -103,12 +120,12 @@ public class ParkourManager {
             }
 
             if (nextBlock.getType() != Material.AIR) {
-                generateBlock();
+                generateNextBlock();
                 return;
             }
 
             jumpCount++;
-            nextBlock.setType(material);
+            nextBlock.setType(jumpColor.getWool());
         }
 
         private void removeBlocks() {
@@ -124,11 +141,11 @@ public class ParkourManager {
             return nextBlock;
         }
 
-        public long getStartTime() {
+        private long getStartTime() {
             return startTime;
         }
 
-        public int getJumpCount() {
+        private int getJumpCount() {
             return jumpCount;
         }
     }

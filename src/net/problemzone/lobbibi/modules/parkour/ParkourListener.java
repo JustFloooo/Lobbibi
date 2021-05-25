@@ -18,9 +18,10 @@ public class ParkourListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerMove(PlayerMoveEvent e) {
+    public void onPlayerParkour(PlayerMoveEvent e) {
 
         Player player = e.getPlayer();
+        if(!player.getWorld().getName().equals("Lobby")) return;
         if (e.getTo() == null) return;
 
         if(e.getTo().getBlockY() < PORT_BACK_HEIGHT) e.setTo(player.getWorld().getSpawnLocation());
