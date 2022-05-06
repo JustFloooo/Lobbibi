@@ -1,5 +1,14 @@
 main: net.problemzone.lobbibi.Main
-version: 1.0
+version: 2.0
 name: Lobbibi
 authors: [JustFloooo]
 api-version: 1.13
+commands:
+  start:
+    description: Start the Game
+    usage: /start [time >= 5]
+    permission: lobbibi.command.start
+  cancel:
+    description: Cancels the Countdown
+    usage: /cancel
+    permission: lobbibi.command.cancel
