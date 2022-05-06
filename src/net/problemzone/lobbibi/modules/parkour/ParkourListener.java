@@ -12,7 +12,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public class ParkourListener extends ListenerWrapper implements Listener {
 
     private static final int MAX_DISTANCE_TO_FAIL = 10;
-    private static final int PORT_BACK_HEIGHT = 130;
+    private static final int PORT_BACK_HEIGHT = 100; //vorher 130
 
     private final ParkourManager parkourManager;
     private final LobbyManager lobbyManager;
